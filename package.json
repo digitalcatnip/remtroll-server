@@ -1,0 +1,29 @@
+{
+  "name": "remtroll-server",
+  "version": "0.0.1",
+  "description": "An HTTP server for the RemTroll App",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/digitalcatnip/remtroll-server.git"
+  },
+  "keywords": [
+    "wakeonlan",
+    "keepalive"
+  ],
+  "author": "James McCarthy",
+  "license": "GPL-v2",
+  "bugs": {
+    "url": "https://github.com/digitalcatnip/remtroll-server/issues"
+  },
+  "homepage": "https://github.com/digitalcatnip/remtroll-server#readme",
+  "dependencies": {
+    "console-stamp": "^0.2.0",
+    "express": "^4.13.3",
+    "jade": "^1.11.0",
+    "morgan": "^1.6.1"
+  }
+}
