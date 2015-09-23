@@ -1,6 +1,7 @@
 var os = require('os');
-var sys = require('sys')
+var sys = require('sys');
 var exec = require('child_process').exec;
+var config = require('./config.js').Config;
 
 exports.RemTrollHandler = {
   getMacForIFace: function(iface) {
@@ -31,15 +32,23 @@ exports.RemTrollHandler = {
       ping: true
     };
   },
-  shutdown: function() {
+  shutdown: function(passphrase) {
+    var actualPw = config.getConfigElement('shutphrase');
+    if(actualPw != passphrase)
+    {
+      console.log('Invalid passphrase specified');
+      return {result: false};
+    }
     var osType = os.type();
+    var puts = function(error, stdout, stderr) { console.log(stdout) };
     if(osType == 'Linux' || osType == 'Darwin')
     {
-      var puts = function(error, stdout, stderr) { console.log(stdout) };
-      exec("shutdown -h now", puts);
+      exec("sudo shutdown -h now", puts);
     }
-    else {
+    else if(osType =='Windows_NT')
+    {
       //Are we windows?
+      exec("shutdown /s", puts);
     }
 
     return {result: true};
