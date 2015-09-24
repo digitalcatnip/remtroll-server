@@ -9,6 +9,8 @@ var http = require('http'),
 var app = express();
 var cfgFile = './cfg/remtroll.cfg';
 
+console.log('Version is ' + process.version);
+
 if(process.argv.length > 3)
 {
   console.log("The config file path should be the only argument.");
@@ -24,6 +26,14 @@ if (config.isConfigValid())
 {
   app.set('port', process.env.PORT || config.getConfigElement('port'));
   app.set('view engine', 'jade');
+  app.disable('etag');
+
+  // CORS (Cross-Origin Resource Sharing) headers to support Cross-site HTTP requests
+  app.all('*', function(req, res, next) {
+      res.header("Access-Control-Allow-Origin", "*");
+      res.header("Access-Control-Allow-Headers", "X-Requested-With");
+      next();
+  });
 
   //add timestamps in front of log messages
   //since logger only returns a UTC version of date, I'm defining my own date format - using an internal module from console-stamp
