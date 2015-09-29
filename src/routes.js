@@ -17,7 +17,7 @@
 
 var express = require('express');
 var router = express.Router();
-var handler = require('./handler').RemTrollHandler;
+var handler = require(__dirname + 'src/handler').RemTrollHandler;
 
 router.get('/', function(req, res) {
   res.send(handler.getBody());

@@ -21,10 +21,10 @@ var http = require('http'),
   os = require('os'),
   fs = require('fs'),
   morgan = require('morgan'),
-  routes = require('./routes'),
-  config = require('./config').Config;
+  routes = require(__dirname + 'src/routes'),
+  config = require(__dirname + 'src/config').Config;
 var app = express();
-var cfgFile = './cfg/remtroll.cfg';
+var cfgFile = __dirname + '/cfg/remtroll.cfg';
 
 console.log('Version is ' + process.version);
 
