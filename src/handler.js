@@ -1,6 +1,6 @@
 var os = require('os');
 var exec = require('child_process').exec;
-var config = require('./config.js').Config;
+var config = require(__dirname + '/config.js').Config;
 
 exports.RemTrollHandler = {
   getMacForIFace: function(iface) {

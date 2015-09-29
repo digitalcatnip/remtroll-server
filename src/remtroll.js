@@ -1,13 +1,30 @@
+//    RemTroll Server - Send data to the RemTroll mobile app
+//    Copyright (C) 2015  James McCarthy
+//
+//    This program is free software; you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation; either version 2 of the License, or
+//    (at your option) any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License along
+//    with this program; if not, write to the Free Software Foundation, Inc.,
+//    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
 var http = require('http'),
   https = require('https'),
   express = require('express'),
   os = require('os'),
   fs = require('fs'),
   morgan = require('morgan'),
-  routes = require('./routes'),
-  config = require('./config').Config;
+  routes = require(__dirname + 'src/routes'),
+  config = require(__dirname + 'src/config').Config;
 var app = express();
-var cfgFile = './cfg/remtroll.cfg';
+var cfgFile = __dirname + '/cfg/remtroll.cfg';
 
 console.log('Version is ' + process.version);
 
