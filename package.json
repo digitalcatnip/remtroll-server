@@ -1,6 +1,6 @@
 {
   "name": "remtroll-server",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "An HTTP server for the RemTroll App",
   "main": "src/index.js",
   "scripts": {
@@ -19,10 +19,10 @@
   "bugs": {
     "url": "https://github.com/digitalcatnip/remtroll-server/issues"
   },
-  "bin" : {
-      "remtroll" : "src/remtroll.js"
+  "bin": {
+    "remtroll": "src/remtroll.js"
   },
-  "files" : [
+  "files": [
     "src",
     "views",
     "cfg",
