@@ -45,6 +45,7 @@ config.readConfig(cfgFile);
 if (config.isConfigValid())
 {
   app.set('port', process.env.PORT || config.getConfigElement('port'));
+  app.set('views', __dirname + '../views');
   app.set('view engine', 'jade');
   app.disable('etag');
 
