@@ -15,10 +15,19 @@
     "keepalive"
   ],
   "author": "James McCarthy",
-  "license": "GPL-v2",
+  "license": "GPL-2.0",
   "bugs": {
     "url": "https://github.com/digitalcatnip/remtroll-server/issues"
   },
+  "bin" : {
+      "remtroll" : "src/remtroll.js"
+  },
+  "files" : [
+    "src",
+    "views",
+    "cfg",
+    "LICENSE"
+  ],
   "homepage": "https://github.com/digitalcatnip/remtroll-server#readme",
   "dependencies": {
     "console-stamp": "^0.2.0",
