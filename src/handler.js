@@ -53,7 +53,7 @@ exports.RemTrollHandler = {
     if(actualPw != passphrase)
     {
       console.log('Invalid passphrase specified');
-      return {result: false};
+      return {'error': 'Invalid passphrase'};
     }
     var osType = os.type();
     var puts = function(error, stdout, stderr) { console.log(stdout) };
