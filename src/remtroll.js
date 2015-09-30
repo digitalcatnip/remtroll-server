@@ -29,8 +29,7 @@ var http = require('http'),
 var app = express();
 var cfgFile = __dirname + '/../cfg/remtroll.cfg';
 
-console.log('Version is ' + process.version);
-
+//Check for config file argument
 if(process.argv.length > 3)
 {
   console.log("The config file path should be the only argument.");
@@ -41,9 +40,12 @@ else if( process.argv.length == 3)
   cfgFile = process.argv[2];
 }
 
+//Load the config file
 config.readConfig(cfgFile);
 if (config.isConfigValid())
 {
+  console.log('Config file has been read successfully');
+  //Setup server - redirect errors to views and set the configured port.
   app.set('port', process.env.PORT || config.getConfigElement('port'));
   app.set('views', __dirname + '/../views');
   app.set('view engine', 'jade');
@@ -64,6 +66,7 @@ if (config.isConfigValid())
   });
   app.use(morgan('[:mydate] :method :url :status :res[content-length] - :remote-addr - :response-time ms'));
 
+  //Setup routing to routes.js
   app.use('/', routes);
   app.use(function(req, res) {
     res.render('404', {
@@ -71,6 +74,8 @@ if (config.isConfigValid())
     });
   });
 
+  //If we're not secure, bind to port using HTTP
+  //Otherwise configure security and bind using HTTPS
   if(!config.getConfigElement('secure'))
   {
     http.createServer(app).listen(app.get('port'), function() {
