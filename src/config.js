@@ -16,65 +16,155 @@
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 var fs = require('fs');
+var prompt = require('prompt');
+var colors = require("colors/safe");
 var cfg = {};
 var isValid = false;
 var defaults = {};
 
-exports.Config = {
-  initialize : function() {
-    cfg = {};
-    isValid = false;
-    defaults = {
-      'port'        : 3000,
-      'secure'      : false,
-      'shutphrase'  : 'supersecret'
-    };
-  },
-  readConfig : function (filename) {
-    var data = fs.readFileSync(filename);
-    try
+var configPrompt = [
     {
-      cfg = JSON.parse(data);
-      console.log('Config file has been read.');
-      this.validateConfig();
-    }
-    catch (err)
+        name: 'secure',
+        type: 'boolean',
+        required: true,
+        description: colors.white('Should RemTroll use HTTPS?'),
+        message: 'Please answer t, f, true, false',
+    },
     {
-      isValid = false;
-      console.log('There has been an error parsing the config.')
-      console.log(err);
-    }
-  },
-  getDefaultForElement : function (element) {
-    if( element in defaults)
-      return defaults[element];
-    else
-      return false;
-  },
-  getConfigElement : function (element) {
-    if( element in cfg )
-      return cfg[element];
-    else
-      return this.getDefaultForElement(element);
-  },
-  validateConfig : function() {
-    isValid = true;
-    if(this.getConfigElement('secure'))
+        name: 'port',
+        type: 'integer',
+        description: colors.white('What port should we listen on?'),
+        message: 'Port should be greater than 1023 and less than 49152',
+        required: true,
+        conform: function(value) {
+            return value > 1023 && value < 49152;
+        }
+    },
     {
-      if(this.getConfigElement('privkey') === false)
-      {
-        console.log('You must specify a private key if you want to use https!');
-        isValid = false;
-      }
+        name: 'shutphrase',
+        type: 'string',
+        hidden: true,
+        required: true,
+        description: colors.white('What password should RemTroll require for commands?'),
+    },
+    {
+        name: 'privkey',
+        type: 'string',
+        required: false,
+        description: colors.white('What is the path to your private key for SSL?'),
+        default: '',
+        ask: function() {
+            return prompt.history('secure').value;
+        },
+    },
+    {
+        name: 'pubcert',
+        type: 'string',
+        required: false,
+        description: colors.white('What is the path to your public key for SSL?'),
+        default: '',
+        ask: function() {
+            return prompt.history('secure').value;
+        },
+    },
+    {
+        name: 'keypass',
+        type: 'string',
+        required: false,
+        hidden: true,
+        description: colors.white('What is the password to your private key for SSL?'),
+        default: '',
+        ask: function() {
+            return prompt.history('secure').value;
+        },
+    },
+    {
+        name: 'cacert',
+        type: 'string',
+        required: false,
+        description: colors.white('What is the path to your certificate authority certificate for SSL?'),
+        default: '',
+        ask: function() {
+            return prompt.history('secure').value;
+        },
+    },
+];
 
-      if(this.getConfigElement('pubcert') === false)
-      {
-        console.log('You must specify a public key if you want to use https!');
+exports.Config = {
+    initialize: function() {
+        cfg = {};
         isValid = false;
-      }
-    }
-  },
-  isConfigValid : function () {
-    return isValid;
-  }
+        defaults = {
+            'port': 3000,
+            'secure': false,
+            'shutphrase': 'supersecret'
+        };
+    },
+    readConfig: function(filename) {
+        var data = fs.readFileSync(filename);
+        try
+        {
+            cfg = JSON.parse(data);
+            console.log('Config file has been read.');
+            this.validateConfig();
+            configPrompt[0].default = this.getConfigElement('secure');
+            configPrompt[1].default = this.getConfigElement('port');
+            configPrompt[2].default = this.getConfigElement('shutphrase');
+            configPrompt[3].default = this.getConfigElement('privkey');
+            configPrompt[4].default = this.getConfigElement('pubcert');
+            configPrompt[5].default = this.getConfigElement('keypass');
+            configPrompt[6].default = this.getConfigElement('cacert');
+        } catch (err) {
+            isValid = false;
+            console.log('There has been an error parsing the config.')
+            console.log(err);
+        }
+    },
+    getDefaultForElement: function(element) {
+        if (element in defaults)
+            return defaults[element];
+        else if (element == 'secure')
+            return false
+        else if (element == 'port')
+            return 3000;
+        else
+            return '';
+    },
+    getConfigElement: function(element) {
+        if (element in cfg)
+            return cfg[element];
+        else
+            return this.getDefaultForElement(element);
+        }
+    ,
+    validateConfig: function() {
+        isValid = true;
+        if (this.getConfigElement('secure')) {
+            if (this.getConfigElement('privkey') === false) {
+                console.log('You must specify a private key if you want to use https!');
+                isValid = false;
+            }
+
+            if (this.getConfigElement('pubcert') === false) {
+                console.log('You must specify a public key if you want to use https!');
+                isValid = false;
+            }
+        }
+    },
+    isConfigValid: function() {
+        return isValid;
+    },
+    editConfig: function(filename) {
+        this.readConfig(filename);
+        console.log('Starting configuration!  Hit enter to keep the current value for the config.');
+
+        prompt.message = "";
+        prompt.delimiter = colors.green(": ");
+        prompt.start();
+        prompt.get(configPrompt, function(err, result) {
+            fs.writeFileSync(filename, JSON.stringify(result, null, '\t'));
+            console.log('Updated configuration successfully!');
+            process.exit();
+        });
+    },
 };
