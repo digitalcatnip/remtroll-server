@@ -20,53 +20,69 @@ var exec = require('child_process').exec;
 var config = require(__dirname + '/config.js').Config;
 
 exports.RemTrollHandler = {
-  getMacForIFace: function(iface) {
-    var interfaces = os.networkInterfaces();
-    var result = {
-      mac: ''
-    };
-    for (var interface in interfaces) {
-      if (interface.toLowerCase() == iface.toLowerCase()) {
-        var elements = interfaces[interface];
-        for (var i = 0; i < elements.length; i++) {
-          data = elements[i];
-          if (data.family.toLowerCase() === 'ipv4') {
-            console.log('mac is ' + data.mac);
-            result.mac = data.mac;
-          }
+    getMacForIFace: function(iface) {
+        var interfaces = os.networkInterfaces();
+        var result = {
+            mac: ''
+        };
+        for (var iface in interfaces) {
+            if (iface.toLowerCase() == iface.toLowerCase()) {
+                var elements = interfaces[iface];
+                for (var i = 0; i < elements.length; i++) {
+                    data = elements[i];
+                    if (data.family.toLowerCase() === 'ipv4') {
+                        console.log('mac is ' + data.mac);
+                        result.mac = data.mac;
+                    }
+                }
+            }
         }
-      }
-    }
 
-    return result;
-  },
-  getBody: function() {
-    return '<html><body><h1>Hello!</h1></body></html>';
-  },
-  getPing: function() {
-    return {
-      ping: true
-    };
-  },
-  shutdown: function(passphrase) {
-    var actualPw = config.getConfigElement('shutphrase');
-    if(actualPw != passphrase)
-    {
-      console.log('Invalid passphrase specified');
-      return {'error': 'Invalid passphrase'};
-    }
-    var osType = os.type();
-    var puts = function(error, stdout, stderr) { console.log(stdout) };
-    if(osType == 'Linux' || osType == 'Darwin')
-    {
-      exec("sudo shutdown -h now", puts);
-    }
-    else if(osType =='Windows_NT')
-    {
-      //Are we windows?
-      exec("shutdown /s", puts);
-    }
+        return result;
+    },
+    getAllMacs() {
+        const interfaces = os.networkInterfaces();
+        const results = [];
+        const ifaces = Object.keys(interfaces);
+        for (let j = 0; j < ifaces.length; j += 1) {
+            const iface = ifaces[j];
+            const elements = interfaces[iface];
+            for (let i = 0; i < elements.length; i += 1) {
+                const result = {};
+                const data = elements[i];
+                if (!data.internal && 'mac' in data && 'family' in data && 'address' in data) {
+                    result.mac = data.mac;
+                    result.protocol = data.family.toLowerCase();
+                    result.address = data.address;
+                    results.push(result);
+                }
+            }
+        }
+        return results;
+    },
+    getBody: function() {
+        return '<html><body><h1>Hello!</h1></body></html>';
+    },
+    getPing: function() {
+        return {ping: true};
+    },
+    shutdown: function(passphrase) {
+        var actualPw = config.getConfigElement('shutphrase');
+        if (actualPw != passphrase) {
+            console.log('Invalid passphrase specified');
+            return {'error': 'Invalid passphrase'};
+        }
+        var osType = os.type();
+        var puts = function(error, stdout, stderr) {
+            console.log(stdout)
+        };
+        if (osType == 'Linux' || osType == 'Darwin') {
+            exec("sudo shutdown -h now", puts);
+        } else if (osType == 'Windows_NT') {
+            //Are we windows?
+            exec("shutdown /s", puts);
+        }
 
-    return {result: true};
-  },
+        return {result: true};
+    }
 };
