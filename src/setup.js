@@ -4,7 +4,7 @@
 * @Email:  james@catnip.io
 * @Filename: setup.js
 * @Last modified by:   james
-* @Last modified time: 2017-02-19T06:01:56-05:00
+* @Last modified time: 2017-02-19T06:51:49-05:00
 * @Copyright: Copyright 2017, Digital Catnip
 */
 //
@@ -62,7 +62,6 @@ exports.Setup = {
             },
             body: JSON.stringify(body),
         };
-        console.log(options);
         fetch('https://remtroll-158923.appspot-preview.com/setup', options)
             .then((res) => {
                 if (res.status === 500)
