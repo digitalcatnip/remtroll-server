@@ -9,11 +9,13 @@ To install from the command line, run:
 
 `npm install remtroll-server -g`
 
-You will then be able to run remtroll by doing the following:
+# Initial setup
+Follow these steps to setup the server.
 
-`remtroll <config path>`
-
-where config path is the path to your configuration file.  This is optional as you can edit the configuration file in the module directory where remtroll-server is installed.
+1. `remtroll --config`
+2. Start the server: `remtroll`
+3. `remtroll --setup`
+4. In the RemTroll app, enter the 4 digit code and it will self configure.
 
 # Configuration
 You can run `remtroll --config` to run through the configuration options and edit
@@ -21,6 +23,9 @@ the default configuration file.
 
 See [the wiki](https://github.com/digitalcatnip/remtroll-server/wiki) for details
 on what each configuration option means.
+
+If you have a custom configuration file, you can run the server with the command
+`remtroll <path to config>`.
 
 # Security
 By default, the server is configured to run without security.  You can change this by
