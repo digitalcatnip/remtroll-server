@@ -1,15 +1,19 @@
 {
   "name": "remtroll-server",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "An HTTP server for the RemTroll App",
-  "main": "src/index.js",
+  "main": "src/remtroll.js",
   "scripts": {
     "config": "node src/remtroll.js --config",
+    "setup": "node src/remtroll.js --setup",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/digitalcatnip/remtroll-server.git"
+  },
+  "engines": {
+    "node": ">=6.9.5"
   },
   "keywords": [
     "wakeonlan",
