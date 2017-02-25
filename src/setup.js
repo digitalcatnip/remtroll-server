@@ -4,7 +4,7 @@
 * @Email:  james@catnip.io
 * @Filename: setup.js
 * @Last modified by:   james
-* @Last modified time: 2017-02-19T06:51:49-05:00
+* @Last modified time: 2017-02-22T07:41:23-05:00
 * @Copyright: Copyright 2017, Digital Catnip
 */
 //
@@ -24,6 +24,7 @@
 
 const handler = require('./handler').RemTrollHandler;
 const fetch = require('node-fetch');
+const config = require('./config').Config;
 
 let crypto = null;
 try {
@@ -94,7 +95,11 @@ exports.Setup = {
             return;
         // Put together data package for server upload
         const networkData = handler.getAllMacs();
-        const data = {data: networkData};
+        const data = {
+            data: networkData,
+            secure: config.getConfigElement('secure'),
+            port: config.getConfigElement('port'),
+        };
         this.hashInterfaces(data);
         this.sendRequestToServer(data, data.hash);
     },

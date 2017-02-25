@@ -22,19 +22,24 @@ const http = require('http');
 const https = require('https');
 const express = require('express');
 const fs = require('fs');
+const path = require('path');
 const morgan = require('morgan');
 const routes = require('./routes');
 const config = require('./config').Config;
 const setup = require('./setup').Setup;
 
 const app = express();
-let cfgFile = '../cfg/remtroll.cfg';
+let cfgFile = path.join(__dirname, '../cfg/remtroll.cfg');
 
 if (process.argv.length === 3 && process.argv[2] === '--config')
     config.editConfig(cfgFile);
-else if (process.argv.length === 3 && process.argv[2] === '--setup')
-    setup.runSetup();
-else {
+else if (process.argv.length === 3 && process.argv[2] === '--setup') {
+    config.readConfig(cfgFile);
+    if (!config.isConfigValid())
+        console.log('The config is not valid so exiting...');
+    else
+        setup.runSetup();
+} else {
     // Check for config file argument
     if (process.argv.length > 3) {
         console.log('The config file path should be the only argument.');
