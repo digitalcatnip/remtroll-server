@@ -4,7 +4,7 @@
 * @Email:  james@catnip.io
 * @Filename: setup.js
 * @Last modified by:   james
-* @Last modified time: 2017-02-22T07:41:23-05:00
+* @Last modified time: 2017-03-11T15:04:43-05:00
 * @Copyright: Copyright 2017, Digital Catnip
 */
 //
@@ -54,6 +54,16 @@ exports.Setup = {
             .update(data.address)
             .digest('hex');
     },
+    getCurrentOS() {
+        const os = process.platform;
+        if (os === 'darwin')
+            return 'mac';
+        else if (os === 'linux')
+            return 'linux';
+        else if (os.startsWith('win'))
+            return 'windows';
+        return 'bsd';
+    },
     sendRequestToServer(body, hash) {
         const options = {
             method: 'PUT',
@@ -63,7 +73,7 @@ exports.Setup = {
             },
             body: JSON.stringify(body),
         };
-        fetch('https://remtroll-158923.appspot-preview.com/setup', options)
+        fetch('https://remtroll.herokuapp.com/setup', options)
             .then((res) => {
                 if (res.status === 500)
                     return res.text();
@@ -99,6 +109,7 @@ exports.Setup = {
             data: networkData,
             secure: config.getConfigElement('secure'),
             port: config.getConfigElement('port'),
+            system: this.getCurrentOS(),
         };
         this.hashInterfaces(data);
         this.sendRequestToServer(data, data.hash);
