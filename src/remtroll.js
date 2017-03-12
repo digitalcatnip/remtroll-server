@@ -91,7 +91,7 @@ else if (process.argv.length === 3 && process.argv[2] === '--setup') {
             options.cert = fs.readFileSync(config.getConfigElement('pubcert'));
             if (config.getConfigElement('keypass') !== false)
                 options.passphrase = config.getConfigElement('keypass');
-            if (config.getConfigElement('cacert') !== false)
+            if (config.getConfigElement('cacert') !== '')
                 options.ca = fs.readFileSync(config.getConfigElement('cacert'));
             https.createServer(options, app).listen(app.get('port'), () => {
                 console.log(`Express server using https on port ${config.getConfigElement('port')}`);
