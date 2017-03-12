@@ -1,4 +1,4 @@
-#!/sbin/runscript
+#!/sbin/openrc-run
 
 # Make sure you set USER and GROUP below to the correct values.
 # The command below assumes you've setup a config in /etc/remtroll
