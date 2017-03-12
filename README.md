@@ -18,8 +18,8 @@ To install from the command line, run:
 Follow these steps to setup the server.
 
 1. `remtroll --config`
-2. Start the server: `remtroll`
-3. `remtroll --setup`
+2. `remtroll --setup`
+3. Start the server: `remtroll`
 4. In the RemTroll app, enter the 4 digit code and it will self configure.
 
 # Configuration
@@ -35,4 +35,9 @@ If you have a custom configuration file, you can run the server with the command
 # Security
 By default, the server is configured to run without security.  We recommend changing this by
 following instructions on [the wiki](https://github.com/digitalcatnip/remtroll-server/wiki#self-signed-certificate)
-to create a self-signed certificate before adding the server to your app.
+to create a self-signed certificate before adding the server to your app. Once you've
+done that you can update the configuration with the path to your new private key
+and public certificate.
+
+We also recommend you wait until you have the security setup until you upload
+the configuration to the app using `remtroll --setup`
