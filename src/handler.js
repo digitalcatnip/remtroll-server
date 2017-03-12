@@ -69,7 +69,6 @@ exports.RemTrollHandler = {
         return '<html><body><h1>Hello!</h1></body></html>';
     },
     getPing() {
-        console.log('In ping');
         return {ping: true, version: pjson.version};
     },
     shutdown(passphrase) {

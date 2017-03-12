@@ -15,39 +15,40 @@
 //    with this program; if not, write to the Free Software Foundation, Inc.,
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-var express = require('express');
-var router = express.Router();
-var handler = require(__dirname + '/handler').RemTrollHandler;
+const express = require('express');
+const path = require('path');
 
-router.get('/', function(req, res) {
-  res.send(handler.getBody());
+const router = express.Router(); // eslint-disable-line new-cap
+const handler = require(path.join(__dirname, 'handler')).RemTrollHandler;
+
+router.get('/', (req, res) => {
+    res.send(handler.getBody());
 });
 
-//Respond to pings!
-router.get('/ping', function(req, res) {
-    console.log('Got pings');
-  res.json(handler.getPing());
+// Respond to pings!
+router.get('/ping', (req, res) => {
+    res.json(handler.getPing());
 });
 
-router.get('/mac', function(req, res) {
-  var err = {'error': 'Missing parameter'};
-  res.json(err);
+router.get('/mac', (req, res) => {
+    const err = {error: 'Missing parameter'};
+    res.json(err);
 });
 
-//Respond to mac!
-router.get('/mac/:iface', function(req, res) {
-  console.log('MAC for ' + req.params.iface + ' received from ' + req.ip);
-  res.json(handler.getMacForIFace(req.params.iface));
+// Respond to mac!
+router.get('/mac/:iface', (req, res) => {
+    console.log(`MAC for ${req.params.iface} received from ${req.ip}`);
+    res.json(handler.getMacForIFace(req.params.iface));
 });
 
-router.get('/shutdown', function(req, res) {
-  var err = {'error': 'Missing parameter'};
-  res.json(err);
+router.get('/shutdown', (req, res) => {
+    const err = {error: 'Missing parameter'};
+    res.json(err);
 });
 
-//Respond to shutdown!
-router.get('/shutdown/:phrase', function(req,res) {
-  res.json(handler.shutdown(req.params.phrase));
+// Respond to shutdown!
+router.get('/shutdown/:phrase', (req, res) => {
+    res.json(handler.shutdown(req.params.phrase));
 });
 
 module.exports = router;
