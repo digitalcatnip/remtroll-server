@@ -4,6 +4,11 @@ for the RemTroll mobile app.
 
 It is developed by [Digital Catnip](http://catnip.io).
 
+1. [Installation](#installation)
+2. [Initial Setup](#initial-setup)
+3. [Configuration](#configuration)
+4. [Security](#security)
+
 # Installation
 To install from the command line, run:
 
@@ -28,5 +33,6 @@ If you have a custom configuration file, you can run the server with the command
 `remtroll <path to config>`.
 
 # Security
-By default, the server is configured to run without security.  You can change this by
-following instructions on [the wiki](https://github.com/digitalcatnip/remtroll-server/wiki).
+By default, the server is configured to run without security.  We recommend changing this by
+following instructions on [the wiki](https://github.com/digitalcatnip/remtroll-server/wiki#self-signed-certificate)
+to create a self-signed certificate before adding the server to your app.
