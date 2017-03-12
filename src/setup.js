@@ -4,7 +4,7 @@
 * @Email:  james@catnip.io
 * @Filename: setup.js
 * @Last modified by:   james
-* @Last modified time: 2017-03-11T15:04:43-05:00
+* @Last modified time: 2017-03-12T15:22:19-04:00
 * @Copyright: Copyright 2017, Digital Catnip
 */
 //
@@ -25,6 +25,7 @@
 const handler = require('./handler').RemTrollHandler;
 const fetch = require('node-fetch');
 const config = require('./config').Config;
+const fs = require('fs');
 
 let crypto = null;
 try {
@@ -41,6 +42,15 @@ exports.Setup = {
             return false;
         }
 
+        return true;
+    },
+    verifyConfig() {
+        const secure = config.getConfigElement('secure');
+        const pubCert = config.getConfigElement('pubcert');
+        if (secure && pubCert === '') {
+            console.log('No SSL certificate specified and server is marked secure - please re-run "remtroll --config" to correct');
+            return false;
+        }
         return true;
     },
     hashInterfaces(body) {
@@ -101,7 +111,7 @@ exports.Setup = {
     },
     runSetup() {
         // Verify we have crypto
-        if (!this.verifyCrypto())
+        if (!this.verifyCrypto() || !this.verifyConfig())
             return;
         // Put together data package for server upload
         const networkData = handler.getAllMacs();
@@ -110,6 +120,7 @@ exports.Setup = {
             secure: config.getConfigElement('secure'),
             port: config.getConfigElement('port'),
             system: this.getCurrentOS(),
+            pubcert: fs.readFileSync(config.getConfigElement('pubcert'), 'utf8'),
         };
         this.hashInterfaces(data);
         this.sendRequestToServer(data, data.hash);
