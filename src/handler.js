@@ -15,23 +15,28 @@
 //    with this program; if not, write to the Free Software Foundation, Inc.,
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-var os = require('os');
-var exec = require('child_process').exec;
-var config = require(__dirname + '/config.js').Config;
+const os = require('os');
+const exec = require('child_process').exec;
+const path = require('path');
+const pjson = require('../package.json');
+
+
+const config = require(path.join(__dirname, 'config.js')).Config;
 
 exports.RemTrollHandler = {
-    getMacForIFace: function(iface) {
-        var interfaces = os.networkInterfaces();
-        var result = {
-            mac: ''
+    getMacForIFace(iface) {
+        const interfaces = os.networkInterfaces();
+        const result = {
+            mac: '',
         };
-        for (var iface in interfaces) {
-            if (iface.toLowerCase() == iface.toLowerCase()) {
-                var elements = interfaces[iface];
-                for (var i = 0; i < elements.length; i++) {
-                    data = elements[i];
+        for (let j = 0; j < interfaces.length; j += 1) {
+            const inter = interfaces[j];
+            if (inter.toLowerCase() === iface.toLowerCase()) {
+                const elements = interfaces[iface];
+                for (let i = 0; i < elements.length; i += 1) {
+                    const data = elements[i];
                     if (data.family.toLowerCase() === 'ipv4') {
-                        console.log('mac is ' + data.mac);
+                        console.log(`mac is ${data.mac}`);
                         result.mac = data.mac;
                     }
                 }
@@ -60,29 +65,29 @@ exports.RemTrollHandler = {
         }
         return results;
     },
-    getBody: function() {
+    getBody() {
         return '<html><body><h1>Hello!</h1></body></html>';
     },
-    getPing: function() {
-        return {ping: true};
+    getPing() {
+        console.log('In ping');
+        return {ping: true, version: pjson.version};
     },
-    shutdown: function(passphrase) {
-        var actualPw = config.getConfigElement('shutphrase');
-        if (actualPw != passphrase) {
+    shutdown(passphrase) {
+        const actualPw = config.getConfigElement('shutphrase');
+        if (actualPw !== passphrase) {
             console.log('Invalid passphrase specified');
-            return {'error': 'Invalid passphrase'};
+            return {error: 'Invalid passphrase'};
         }
-        var osType = os.type();
-        var puts = function(error, stdout, stderr) {
-            console.log(stdout)
+        const osType = os.type();
+        const puts = (error, stdout) => {
+            console.log(stdout);
         };
-        if (osType == 'Linux' || osType == 'Darwin') {
-            exec("sudo shutdown -h now", puts);
-        } else if (osType == 'Windows_NT') {
-            //Are we windows?
-            exec("shutdown /s", puts);
-        }
+        if (osType === 'Linux' || osType === 'Darwin' || osType === 'FreeBSD')
+            exec('sudo shutdown -h now', puts);
+        else if (osType === 'Windows_NT')
+            // Are we windows?
+            exec('shutdown /s', puts);
 
         return {result: true};
-    }
+    },
 };

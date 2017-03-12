@@ -25,6 +25,7 @@ router.get('/', function(req, res) {
 
 //Respond to pings!
 router.get('/ping', function(req, res) {
+    console.log('Got pings');
   res.json(handler.getPing());
 });
 
