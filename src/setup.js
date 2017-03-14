@@ -4,7 +4,7 @@
 * @Email:  james@catnip.io
 * @Filename: setup.js
 * @Last modified by:   james
-* @Last modified time: 2017-03-12T15:22:19-04:00
+* @Last modified time: 2017-03-14T16:23:20-04:00
 * @Copyright: Copyright 2017, Digital Catnip
 */
 //
@@ -115,12 +115,16 @@ exports.Setup = {
             return;
         // Put together data package for server upload
         const networkData = handler.getAllMacs();
+        let cert = '';
+        if (config.getConfigElement('secure'))
+            cert = fs.readFileSync(config.getConfigElement('pubcert'), 'utf8');
+
         const data = {
             data: networkData,
             secure: config.getConfigElement('secure'),
             port: config.getConfigElement('port'),
             system: this.getCurrentOS(),
-            pubcert: fs.readFileSync(config.getConfigElement('pubcert'), 'utf8'),
+            pubcert: cert,
         };
         this.hashInterfaces(data);
         this.sendRequestToServer(data, data.hash);
