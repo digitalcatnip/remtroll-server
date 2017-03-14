@@ -75,7 +75,7 @@ exports.RemTrollHandler = {
         const actualPw = config.getConfigElement('shutphrase');
         if (actualPw !== passphrase) {
             console.log('Invalid passphrase specified');
-            return {error: 'Invalid passphrase'};
+            return {result: false, error: 'Invalid passphrase'};
         }
         const osType = os.type();
         const puts = (error, stdout) => {
@@ -87,6 +87,6 @@ exports.RemTrollHandler = {
             // Are we windows?
             exec('shutdown /s', puts);
 
-        return {result: true};
+        return {result: true, error: ''};
     },
 };
