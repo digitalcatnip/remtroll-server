@@ -1,12 +1,5 @@
-/**
-* @Author: James McCarthy <james>
-* @Date:   2017-02-16T18:01:42-05:00
-* @Email:  james@catnip.io
-* @Filename: setup.js
-* @Last modified by:   james
-* @Last modified time: 2017-03-14T16:23:20-04:00
-* @Copyright: Copyright 2017, Digital Catnip
-*/
+//    RemTroll Setup - Perform steps for automated setup with the app
+//    Copyright (C) 2017  James McCarthy
 //
 //    This program is free software; you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by

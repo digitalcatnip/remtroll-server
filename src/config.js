@@ -15,14 +15,15 @@
 //    with this program; if not, write to the Free Software Foundation, Inc.,
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-var fs = require('fs');
-var prompt = require('prompt');
-var colors = require("colors/safe");
-var cfg = {};
-var isValid = false;
-var defaults = {};
+const fs = require('fs');
+const prompt = require('prompt');
+const colors = require('colors/safe');
 
-var configPrompt = [
+let cfg = {};
+let isValid = false;
+let defaults = {};
+
+const configPrompt = [
     {
         name: 'secure',
         type: 'boolean',
@@ -36,9 +37,7 @@ var configPrompt = [
         description: colors.white('What port should we listen on?'),
         message: 'Port should be greater than 1023 and less than 49152',
         required: true,
-        conform: function(value) {
-            return value > 1023 && value < 49152;
-        }
+        conform: (value) => value > 1023 && value < 49152,
     },
     {
         name: 'shutphrase',
@@ -53,9 +52,7 @@ var configPrompt = [
         required: false,
         description: colors.white('What is the path to your private key for SSL?'),
         default: '',
-        ask: function() {
-            return prompt.history('secure').value;
-        },
+        ask: () => prompt.history('secure').value,
     },
     {
         name: 'pubcert',
@@ -63,9 +60,7 @@ var configPrompt = [
         required: false,
         description: colors.white('What is the path to your public key for SSL?'),
         default: '',
-        ask: function() {
-            return prompt.history('secure').value;
-        },
+        ask: () => prompt.history('secure').value,
     },
     {
         name: 'keypass',
@@ -74,9 +69,7 @@ var configPrompt = [
         hidden: true,
         description: colors.white('What is the password to your private key for SSL?'),
         default: '',
-        ask: function() {
-            return prompt.history('secure').value;
-        },
+        ask: () => prompt.history('secure').value,
     },
     {
         name: 'cacert',
@@ -84,26 +77,23 @@ var configPrompt = [
         required: false,
         description: colors.white('What is the path to your certificate authority certificate for SSL?'),
         default: '',
-        ask: function() {
-            return prompt.history('secure').value;
-        },
+        ask: () => prompt.history('secure').value,
     },
 ];
 
 exports.Config = {
-    initialize: function() {
+    initialize() {
         cfg = {};
         isValid = false;
         defaults = {
-            'port': 3000,
-            'secure': false,
-            'shutphrase': 'supersecret'
+            port: 3000,
+            secure: false,
+            shutphrase: 'supersecret',
         };
     },
-    readConfig: function(filename) {
-        var data = fs.readFileSync(filename);
-        try
-        {
+    readConfig(filename) {
+        try {
+            const data = fs.readFileSync(filename);
             cfg = JSON.parse(data);
             console.log('Config file has been read.');
             this.validateConfig();
@@ -116,28 +106,24 @@ exports.Config = {
             configPrompt[6].default = this.getConfigElement('cacert');
         } catch (err) {
             isValid = false;
-            console.log('There has been an error parsing the config.')
-            console.log(err);
+            console.log('There has been an error parsing the config.');
         }
     },
-    getDefaultForElement: function(element) {
+    getDefaultForElement(element) {
         if (element in defaults)
             return defaults[element];
-        else if (element == 'secure')
-            return false
-        else if (element == 'port')
+        else if (element === 'secure')
+            return false;
+        else if (element === 'port')
             return 3000;
-        else
-            return '';
+        return '';
     },
-    getConfigElement: function(element) {
+    getConfigElement(element) {
         if (element in cfg)
             return cfg[element];
-        else
-            return this.getDefaultForElement(element);
-        }
-    ,
-    validateConfig: function() {
+        return this.getDefaultForElement(element);
+    },
+    validateConfig() {
         isValid = true;
         if (this.getConfigElement('secure')) {
             if (this.getConfigElement('privkey') === false) {
@@ -151,17 +137,17 @@ exports.Config = {
             }
         }
     },
-    isConfigValid: function() {
+    isConfigValid() {
         return isValid;
     },
-    editConfig: function(filename) {
+    editConfig(filename) {
         this.readConfig(filename);
         console.log('Starting configuration!  Hit enter to keep the current value for the config.');
 
-        prompt.message = "";
-        prompt.delimiter = colors.green(": ");
+        prompt.message = '';
+        prompt.delimiter = colors.green(': ');
         prompt.start();
-        prompt.get(configPrompt, function(err, result) {
+        prompt.get(configPrompt, (err, result) => {
             fs.writeFileSync(filename, JSON.stringify(result, null, '\t'));
             console.log('Updated configuration successfully!');
             process.exit();
