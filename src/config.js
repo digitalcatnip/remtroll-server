@@ -148,6 +148,14 @@ exports.Config = {
         prompt.delimiter = colors.green(': ');
         prompt.start();
         prompt.get(configPrompt, (err, result) => {
+            if (err != null && err.toString().includes('canceled')) {
+                console.log('\n');
+                return;
+            }
+            if (err != null) {
+                console.log(`\n\nEncountered error! ${err}\n`);
+                return;
+            }
             fs.writeFileSync(filename, JSON.stringify(result, null, '\t'));
             console.log('Updated configuration successfully!');
             process.exit();
