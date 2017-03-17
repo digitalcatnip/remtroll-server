@@ -1,0 +1,9 @@
+[Unit]
+Description=RemTroll
+
+[Service]
+ExecStart=/usr/bin/remtroll
+
+[Install]
+Requires=network.target
+After=network.target
