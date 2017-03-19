@@ -1,6 +1,6 @@
 {
   "name": "remtroll-server",
-  "version": "0.11.3",
+  "version": "0.12.0",
   "description": "An HTTP server for the RemTroll App",
   "main": "src/remtroll.js",
   "scripts": {
