@@ -16,14 +16,14 @@ start() {
 #    fi
 
     local USEROPT="--user"
-    local USER="root"
+    local USER="{user}"
     local GROUP="wheel"
     if [ ! -f /etc/init.d/sysfs ]; then
 	USEROPT="--chuid"
     fi
     ebegin "Starting RemTroll"
     start-stop-daemon --start --exec "bash" --background --pidfile /etc/remtroll/remtroll.pid \
-    	$USEROPT $USER:$GROUP -- -c "exec remtroll /etc/remtroll/remtroll.cfg > /var/log/remtroll.log"
+    	$USEROPT $USER:$GROUP -- -c "exec remtroll {config} > /var/log/remtroll.log"
     eend $?
 }
 

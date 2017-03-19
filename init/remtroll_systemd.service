@@ -2,7 +2,9 @@
 Description=RemTroll
 
 [Service]
-ExecStart=/usr/bin/remtroll
+ExecStart=/usr/bin/remtroll {config}
+User={user}
+Group={wheel}
 
 [Install]
 Requires=network.target

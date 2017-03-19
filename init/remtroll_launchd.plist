@@ -11,6 +11,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/local/bin/remtroll</string>
+        <string>{config}</string>
     </array>
 
     <key>EnvironmentVariables</key>

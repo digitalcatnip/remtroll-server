@@ -25,14 +25,24 @@ const fs = require('fs');
 const path = require('path');
 const morgan = require('morgan');
 const routes = require('./routes');
+const colors = require('colors/safe');
 const config = require('./config').Config;
 const setup = require('./setup').Setup;
 
 const app = express();
-let cfgFile = path.join(__dirname, '../cfg/remtroll.cfg');
+config.initialize();
+let cfgFile = path.join(config.getDefaultConfigPath(), '/remtroll.cfg');
+if (!fs.existsSync(cfgFile)) {
+    console.log(colors.red(`Using configuration from npm - this could get overwritten on \'npm update\'.
+        If you are running \'remtroll --config\' please ignore this message.`));
+    cfgFile = path.join(__dirname, '../cfg/remtroll.cfg');
+}
 
-if (process.argv.length === 3 && process.argv[2] === '--config')
-    config.editConfig(cfgFile);
+if (process.argv.length >= 3 && (process.argv[2] === '--config' || process.argv[2] === 'config'))
+    if (process.argv.length === 3)
+        config.editConfig(cfgFile);
+    else
+        config.editConfig(process.argv[4]);
 else if (process.argv.length === 3 && process.argv[2] === '--setup') {
     config.readConfig(cfgFile);
     if (!config.isConfigValid())

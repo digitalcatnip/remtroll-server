@@ -16,12 +16,19 @@
 //    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const child_process = require('child_process'); // eslint-disable-line camelcase
 const prompt = require('prompt');
 const colors = require('colors/safe');
 
 let cfg = {};
 let isValid = false;
 let defaults = {};
+
+const INIT_SYSTEMD = 1;
+const INIT_SYSV = 2;
+const INIT_RC = 3;
 
 const configPrompt = [
     {
@@ -90,6 +97,12 @@ exports.Config = {
             secure: false,
             shutphrase: 'supersecret',
         };
+
+        const plat = os.platform();
+
+        this.isMac = plat === 'darwin';
+        this.isWin = plat.includes('win');
+        this.isUnix = !this.isMac && !this.isWin;
     },
     readConfig(filename) {
         try {
@@ -140,6 +153,154 @@ exports.Config = {
     isConfigValid() {
         return isValid;
     },
+    getDefaultConfigPath() {
+        if (this.isMac)
+            return '/Library/Application Support/remtroll/';
+        else if (this.isWin)
+            return `${process.env.ALLUSERSPROFILE}\\remtroll\\`;
+        return '/etc/remtroll';
+    },
+    generateInitPath(choice) {
+        if (choice === INIT_SYSTEMD)
+            return '/lib/systemd/system';
+        else if (choice === INIT_SYSV)
+            return '/etc/init.d';
+        return '/etc/rc.d';
+    },
+    generateInstallPrompt() {
+        let pathValid = '^.*$';
+        const override = {};
+
+        if (this.isMac) {
+            override.configDir = '/Library/Application Support/remtroll/';
+            override.initDir = '/Library/LaunchDaemons/';
+        } else if (this.isWin) {
+            pathValid = '^([a-zA-Z]:)?(\\[^<>:"/\\|?*]+)+\\?$';
+            override.configDir = `${process.env.ALLUSERSPROFILE}\\remtroll\\`;
+            override.initDir = 'win';
+        }
+
+        prompt.override = override;
+        const self = this;
+        const installPrompt = [
+            {
+                name: 'configDir',
+                type: 'string',
+                required: true,
+                description: colors.white('What is the directory where should we install the config?'),
+                default: '/etc/remtroll/',
+                pattern: pathValid,
+                message: 'Invalid directory path',
+            },
+            {
+                name: 'shouldInstallInit',
+                type: 'boolean',
+                required: true,
+                description: colors.white('Do you want to setup RemTroll as a service?'),
+                default: false,
+            },
+            {
+                name: 'initSystem',
+                type: 'integer',
+                ask: () => this.isUnix && prompt.history('shouldInstallInit'),
+                default: 1,
+                required: true,
+                description: colors.white(
+                    `Choose a valid init system:
+                        ${INIT_SYSTEMD}. systemd (RedHat, Ubuntu, Debian)
+                        ${INIT_SYSV}. OpenRC (Slackware, Gentoo)
+                        ${INIT_RC}. rc (FreeBSD)
+                    : `),
+            },
+            {
+                name: 'initDir',
+                type: 'string',
+                required: true,
+                description: colors.white('Where should we install your SysVInit script?'),
+                default: self.generateInitPath(prompt.history('initSystem')),
+                ask: () => this.isUnix && prompt.history('shouldInstallInit'),
+            },
+            {
+                name: 'initUser',
+                type: 'string',
+                required: true,
+                pattern: '.*',
+                description: colors.white('What user should RemTroll run as?'),
+                default: 'root',
+                ask: () => this.isUnix && prompt.history('shouldInstallInit'),
+            },
+        ];
+
+        return installPrompt;
+    },
+    writeInitFile(configPath, initPath, initUser, initSystem) {
+        let infile = '../init/remtroll_openrc.sh';
+        let outfile = 'remtroll.sh';
+        let postCommand = '';
+        if (this.isMac) {
+            infile = '../init/remtroll_launchd.plist';
+            outfile = 'remtroll.plist';
+        } else if (this.isWin) {
+        } else if (initSystem === INIT_SYSV)
+            infile = '../init/remtroll_bsd.sh';
+        else if (initSystem === INIT_SYSTEMD) {
+            infile = '../init/remtroll_systemd.service';
+            outfile = 'remtroll.service';
+            postCommand = 'systemctl enable application.service';
+        }
+
+        let initContents = fs.readFileSync(path.join(__dirname, infile), 'utf8');
+        initContents = initContents.replace('{config}', configPath);
+        initContents = initContents.replace('{user}', initUser);
+        const filename = path.join(initPath, outfile);
+        fs.writeFileSync(filename, initContents);
+        if (postCommand !== '')
+            child_process.exec(postCommand, (error) => {
+                if (error != null)
+                    console.log(colors.red(`Error while running ${postCommand}: ${error.code}`));
+                else
+                    console.log(colors.green(`Service setup at: ${filename}`));
+                process.exit();
+            });
+        else {
+            console.log(colors.green(`Service setup at: ${filename}\n`));
+            console.log(colors.green('Please add remtroll to your default run level.'));
+            if (this.isMac)
+                console.log(colors.green(`Run command 'launchctl ${filename}' to do this`));
+            process.exit();
+        }
+    },
+    continueInstall(newConfig, installResponse) {
+        const filename = path.join(installResponse.configDir, 'remtroll.cfg');
+        fs.writeFileSync(filename, JSON.stringify(newConfig, null, '\t'));
+        console.log('Updated configuration successfully!');
+        if (installResponse.shouldInstallInit)
+            this.writeInitFile(filename, installResponse.initDir, installResponse.initUser, installResponse.initSystem);
+    },
+    installConfig(newConfig) {
+        prompt.start();
+        const self = this;
+        prompt.get(this.generateInstallPrompt(), (err, result) => {
+            if (err != null && err.toString().includes('canceled')) {
+                console.log('\nConfiguration not saved.\n');
+                return;
+            }
+            if (err != null) {
+                console.log(`\n\nEncountered error! ${err}\n`);
+                return;
+            }
+            if (!fs.existsSync(result.configDir))
+                fs.mkdir(result.configDir, 0o775, (error) => {
+                    if (error) {
+                        console.log(colors.red(`Unable to save config: ${error}`));
+                        console.log(colors.red('Do you have permissions to save the file?'));
+                    } else
+                        self.continueInstall(newConfig, result);
+                });
+            else
+                self.continueInstall(newConfig, result);
+        });
+    },
     editConfig(filename) {
         this.readConfig(filename);
         console.log('Starting configuration!  Hit enter to keep the current value for the config.');
@@ -147,18 +308,18 @@ exports.Config = {
         prompt.message = '';
         prompt.delimiter = colors.green(': ');
         prompt.start();
+        const self = this;
         prompt.get(configPrompt, (err, result) => {
             if (err != null && err.toString().includes('canceled')) {
-                console.log('\n');
+                console.log('\nConfiguration not saved.\n');
                 return;
             }
             if (err != null) {
-                console.log(`\n\nEncountered error! ${err}\n`);
+                console.log(colors.red(`\n\nEncountered error! ${err}\n`));
                 return;
             }
-            fs.writeFileSync(filename, JSON.stringify(result, null, '\t'));
-            console.log('Updated configuration successfully!');
-            process.exit();
+            self.installConfig(result);
+            // prompt.stop();
         });
     },
 };
