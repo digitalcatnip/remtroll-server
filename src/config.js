@@ -216,9 +216,28 @@ exports.Config = {
                 name: 'initDir',
                 type: 'string',
                 required: true,
-                description: colors.white('Where should we install your SysVInit script?'),
-                default: self.generateInitPath(prompt.history('initSystem')),
-                ask: () => this.isUnix && prompt.history('shouldInstallInit'),
+                description: colors.white('Where should we install your start script?'),
+                default: '/etc/init.d',
+                ask: () => this.isUnix && prompt.history('shouldInstallInit').value && prompt.history('initSystem').value == INIT_SYSV,
+            },
+            {
+                name: 'sysdInitDir',
+                type: 'string',
+                required: true,
+                description: colors.white('Where should we install your start script?'),
+                default: '/usr/lib/systemd/system',
+                ask: () => {
+                    console.log(`OS is ${this.isUnix}, InstallInit is ${prompt.history('shouldInstallInit').value}, system is ${prompt.history('initSystem').value}`);
+                    return this.isUnix && prompt.history('shouldInstallInit').value && prompt.history('initSystem').value == INIT_SYSTEMD;
+                }
+            },
+            {
+                name: 'rcInitDir',
+                type: 'string',
+                required: true,
+                description: colors.white('Where should we install your start script?'),
+                default: '/etc/rc.d',
+                ask: () => this.isUnix && prompt.history('shouldInstallInit').value && prompt.history('initSystem').value == INIT_RC,
             },
             {
                 name: 'initUser',
@@ -227,13 +246,22 @@ exports.Config = {
                 pattern: '.*',
                 description: colors.white('What user should RemTroll run as?'),
                 default: 'root',
-                ask: () => this.isUnix && prompt.history('shouldInstallInit'),
+                ask: () => this.isUnix && prompt.history('shouldInstallInit').value,
+            },
+            {
+                name: 'initGroup',
+                type: 'string',
+                required: true,
+                pattern: '.*',
+                description: colors.white('What group should RemTroll run as?'),
+                default: 'wheel',
+                ask: () => this.isUnix && prompt.history('shouldInstallInit').value,
             },
         ];
 
         return installPrompt;
     },
-    writeInitFile(configPath, initPath, initUser, initSystem) {
+    writeInitFile(configPath, initPath, initUser, initGroup, initSystem) {
         let infile = '../init/remtroll_openrc.sh';
         let outfile = 'remtroll.sh';
         let postCommand = '';
@@ -246,12 +274,13 @@ exports.Config = {
         else if (initSystem === INIT_SYSTEMD) {
             infile = '../init/remtroll_systemd.service';
             outfile = 'remtroll.service';
-            postCommand = 'systemctl enable application.service';
+            postCommand = 'systemctl enable remtroll.service && systemctl start remtroll.service';
         }
 
         let initContents = fs.readFileSync(path.join(__dirname, infile), 'utf8');
         initContents = initContents.replace('{config}', configPath);
         initContents = initContents.replace('{user}', initUser);
+        initContents = initContents.replace('{group}', initGroup);
         const filename = path.join(initPath, outfile);
         fs.writeFileSync(filename, initContents);
         if (postCommand !== '')
@@ -274,8 +303,14 @@ exports.Config = {
         const filename = path.join(installResponse.configDir, 'remtroll.cfg');
         fs.writeFileSync(filename, JSON.stringify(newConfig, null, '\t'));
         console.log('Updated configuration successfully!');
-        if (installResponse.shouldInstallInit)
-            this.writeInitFile(filename, installResponse.initDir, installResponse.initUser, installResponse.initSystem);
+        if (installResponse.shouldInstallInit) {
+            let dir = installResponse.initDir;
+            if (installResponse.initSystem == INIT_SYSTEMD)
+                dir = installResponse.sysdInitDir;
+            else if (installResponse.initSystem == INIT_RC)
+                dir = installResponse.rcInitDir;
+            this.writeInitFile(filename, dir, installResponse.initUser, installResponse.initGroup, installResponse.initSystem);
+        }
     },
     installConfig(newConfig) {
         prompt.start();
