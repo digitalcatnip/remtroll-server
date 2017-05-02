@@ -22,6 +22,16 @@ const child_process = require('child_process'); // eslint-disable-line camelcase
 const prompt = require('prompt');
 const colors = require('colors/safe');
 
+let Service = null;
+try {
+    if (os.platform().includes('win'))
+        Service = require('node-windows').Service; // eslint-disable-line
+} catch (err) {
+    console.log(err);
+    console.log('node-windows is not installed - please re-run "npm install -g remtroll-server" and make sure node-windows is included.');
+    process.exit();
+}
+
 let cfg = {};
 let isValid = false;
 let defaults = {};
@@ -99,7 +109,6 @@ exports.Config = {
         };
 
         const plat = os.platform();
-
         this.isMac = plat === 'darwin';
         this.isWin = plat.includes('win');
         this.isUnix = !this.isMac && !this.isWin;
@@ -175,20 +184,19 @@ exports.Config = {
             override.configDir = '/Library/Application Support/remtroll/';
             override.initDir = '/Library/LaunchDaemons/';
         } else if (this.isWin) {
-            pathValid = '^([a-zA-Z]:)?(\\[^<>:"/\\|?*]+)+\\?$';
+            pathValid = '^([a-zA-Z]:)?(\\\\[^<>:"/\\|?*]+)+\\\\?$';
             override.configDir = `${process.env.ALLUSERSPROFILE}\\remtroll\\`;
             override.initDir = 'win';
         }
 
         prompt.override = override;
-        const self = this;
         const installPrompt = [
             {
                 name: 'configDir',
                 type: 'string',
                 required: true,
                 description: colors.white('What is the directory where should we install the config?'),
-                default: '/etc/remtroll/',
+                default: override.configDir,
                 pattern: pathValid,
                 message: 'Invalid directory path',
             },
@@ -218,7 +226,7 @@ exports.Config = {
                 required: true,
                 description: colors.white('Where should we install your start script?'),
                 default: '/etc/init.d',
-                ask: () => this.isUnix && prompt.history('shouldInstallInit').value && prompt.history('initSystem').value == INIT_SYSV,
+                ask: () => this.isUnix && prompt.history('shouldInstallInit').value && prompt.history('initSystem').value === INIT_SYSV,
             },
             {
                 name: 'sysdInitDir',
@@ -226,10 +234,7 @@ exports.Config = {
                 required: true,
                 description: colors.white('Where should we install your start script?'),
                 default: '/usr/lib/systemd/system',
-                ask: () => {
-                    console.log(`OS is ${this.isUnix}, InstallInit is ${prompt.history('shouldInstallInit').value}, system is ${prompt.history('initSystem').value}`);
-                    return this.isUnix && prompt.history('shouldInstallInit').value && prompt.history('initSystem').value == INIT_SYSTEMD;
-                }
+                ask: () => this.isUnix && prompt.history('shouldInstallInit').value && prompt.history('initSystem').value === INIT_SYSTEMD,
             },
             {
                 name: 'rcInitDir',
@@ -237,7 +242,7 @@ exports.Config = {
                 required: true,
                 description: colors.white('Where should we install your start script?'),
                 default: '/etc/rc.d',
-                ask: () => this.isUnix && prompt.history('shouldInstallInit').value && prompt.history('initSystem').value == INIT_RC,
+                ask: () => this.isUnix && prompt.history('shouldInstallInit').value && prompt.history('initSystem').value === INIT_RC,
             },
             {
                 name: 'initUser',
@@ -261,6 +266,40 @@ exports.Config = {
 
         return installPrompt;
     },
+    installWindowsService() {
+        const svc = new Service({
+            name: 'RemTroll',
+            description: 'The RemTroll web server',
+            script: path.join(__dirname, 'remtroll.js'),
+        });
+
+        svc.on('uninstall', () => {
+            console.log(colors.green('Existing service has been uninstalled, re-creating it...'));
+            svc.install(`${process.env.ALLUSERSPROFILE}\\remtroll\\`);
+        });
+
+        svc.on('install', () => {
+            console.log(colors.green('Service created, starting RemTroll...'));
+            svc.start();
+        });
+
+        svc.on('alreadyinstalled', () => {
+            console.log('Service already configured, restarting RemTroll...');
+        });
+
+        svc.on('start', () => {
+            console.log(colors.green(`Service setup and running!\n`));
+            process.exit();
+        });
+
+        if (svc.exists) {
+            console.log(colors.green('Windows service already exists, removing it...'));
+            svc.uninstall();
+        } else {
+            console.log(colors.green('Adding Windows service...'));
+            svc.install(`${process.env.ALLUSERSPROFILE}\\remtroll\\`);
+        }
+    },
     writeInitFile(configPath, initPath, initUser, initGroup, initSystem) {
         let infile = '../init/remtroll_openrc.sh';
         let outfile = 'remtroll.sh';
@@ -269,6 +308,8 @@ exports.Config = {
             infile = '../init/remtroll_launchd.plist';
             outfile = 'remtroll.plist';
         } else if (this.isWin) {
+            console.log(colors.red('Do not use this function on windows!'));
+            return;
         } else if (initSystem === INIT_SYSV)
             infile = '../init/remtroll_bsd.sh';
         else if (initSystem === INIT_SYSTEMD) {
@@ -305,11 +346,14 @@ exports.Config = {
         console.log('Updated configuration successfully!');
         if (installResponse.shouldInstallInit) {
             let dir = installResponse.initDir;
-            if (installResponse.initSystem == INIT_SYSTEMD)
+            if (installResponse.initSystem === INIT_SYSTEMD)
                 dir = installResponse.sysdInitDir;
-            else if (installResponse.initSystem == INIT_RC)
+            else if (installResponse.initSystem === INIT_RC)
                 dir = installResponse.rcInitDir;
-            this.writeInitFile(filename, dir, installResponse.initUser, installResponse.initGroup, installResponse.initSystem);
+            if (this.isWin)
+                this.installWindowsService();
+            else
+                this.writeInitFile(filename, dir, installResponse.initUser, installResponse.initGroup, installResponse.initSystem);
         }
     },
     installConfig(newConfig) {
