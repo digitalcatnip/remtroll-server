@@ -24,7 +24,7 @@ const colors = require('colors/safe');
 
 let Service = null;
 try {
-    if (os.platform().includes('win'))
+    if (os.platform().startsWith('win'))
         Service = require('node-windows').Service; // eslint-disable-line
 } catch (err) {
     console.log(err);
@@ -110,7 +110,7 @@ exports.Config = {
 
         const plat = os.platform();
         this.isMac = plat === 'darwin';
-        this.isWin = plat.includes('win');
+        this.isWin = plat.startsWith('win');
         this.isUnix = !this.isMac && !this.isWin;
     },
     readConfig(filename) {
