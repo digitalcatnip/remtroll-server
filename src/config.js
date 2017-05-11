@@ -346,10 +346,11 @@ exports.Config = {
         console.log('Updated configuration successfully!');
         if (installResponse.shouldInstallInit) {
             let dir = installResponse.initDir;
-            if (installResponse.initSystem === INIT_SYSTEMD)
+            if (this.isUnix && installResponse.initSystem === INIT_SYSTEMD)
                 dir = installResponse.sysdInitDir;
-            else if (installResponse.initSystem === INIT_RC)
+            else if (this.isUnix && installResponse.initSystem === INIT_RC)
                 dir = installResponse.rcInitDir;
+
             if (this.isWin)
                 this.installWindowsService();
             else
