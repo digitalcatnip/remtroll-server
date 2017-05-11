@@ -91,11 +91,16 @@ else if (process.argv.length === 3 && process.argv[2] === '--setup') {
 
         // If we're not secure, bind to port using HTTP
         // Otherwise configure security and bind using HTTPS
-        if (!config.getConfigElement('secure'))
-            http.createServer(app).listen(app.get('port'), () => {
+        if (!config.getConfigElement('secure')) {
+            const server = http.createServer(app);
+            server.on('error', (e) => {
+                console.log(`Express failed to start: ${e}`);
+                process.exit();
+            });
+            server.listen(app.get('port'), () => {
                 console.log(`Express server using http on port ${config.getConfigElement('port')}`);
             });
-        else {
+        } else {
             const options = {};
             options.key = fs.readFileSync(config.getConfigElement('privkey'));
             options.cert = fs.readFileSync(config.getConfigElement('pubcert'));
